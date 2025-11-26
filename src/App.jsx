@@ -74,6 +74,8 @@ export default function App() {
   const pop = useSound(POP);
   const whoosh = useSound(WHOOSH);
   const piano = useRef(null);
+  const scrollRef = useRef(null);
+  let touchStartX = 0;
 
   const toggleMusic = () => {
     if (!piano.current) {
@@ -182,13 +184,57 @@ export default function App() {
           </div>
         </section>
 
-        {/* Timeline Carousel */}
         <section className='snap-start min-h-screen flex flex-col justify-center p-8 bg-white/70 relative'>
           <h2 className='text-2xl font-semibold text-center mb-6'>Our Timeline</h2>
 
+          {/* LEFT BUTTON */}
+          <button
+            onClick={() => scrollRef.current?.scrollBy({ left: -300, behavior: 'smooth' })}
+            className='absolute left-2 top-1/2 -translate-y-1/2 bg-white shadow-lg p-3 rounded-full z-20 active:scale-90 transition'
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-6 w-6'
+              fill='none'
+              viewBox='0 0 24 24'
+              stroke='currentColor'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M15 19l-7-7 7-7'
+              />
+            </svg>
+          </button>
+
+          {/* RIGHT BUTTON */}
+          <button
+            onClick={() => scrollRef.current?.scrollBy({ left: 300, behavior: 'smooth' })}
+            className='absolute right-2 top-1/2 -translate-y-1/2 bg-white shadow-lg p-3 rounded-full z-20 active:scale-90 transition'
+          >
+            <svg
+              xmlns='http://www.w3.org/2000/svg'
+              className='h-6 w-6'
+              fill='none'
+              viewBox='0 0 24 24'
+              stroke='currentColor'
+            >
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 5l7 7-7 7' />
+            </svg>
+          </button>
+
+          {/* SCROLL CONTAINER */}
           <div
+            ref={scrollRef}
             className='flex gap-6 px-4 py-2 overflow-x-auto snap-x snap-mandatory scrollbar-none'
             style={{ scrollSnapType: 'x mandatory' }}
+            onTouchStart={(e) => (touchStartX = e.touches[0].clientX)}
+            onTouchEnd={(e) => {
+              const diff = e.changedTouches[0].clientX - touchStartX;
+              if (diff > 50) scrollRef.current?.scrollBy({ left: -300, behavior: 'smooth' });
+              if (diff < -50) scrollRef.current?.scrollBy({ left: 300, behavior: 'smooth' });
+            }}
           >
             {timelineData.map((item, i) => (
               <motion.div
