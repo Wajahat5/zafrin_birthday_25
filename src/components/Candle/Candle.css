@@ -1,0 +1,43 @@
+.candle-container {
+  position: relative;
+  width: 120px;
+  height: 220px;
+  cursor: pointer;
+  z-index: 10;
+}
+
+.candle-base {
+  width: 100%;
+}
+
+.candle-flame {
+  position: absolute;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 45px;
+  pointer-events: none; /* IMPORTANT — ensures click works */
+}
+
+.candle-smoke {
+  position: absolute;
+  top: -20px;
+  left: 50%;
+  width: 12px;
+  height: 40px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  animation: smoke 1.2s ease-out forwards;
+}
+
+@keyframes smoke {
+  0% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-50px) scale(1.4);
+  }
+}
