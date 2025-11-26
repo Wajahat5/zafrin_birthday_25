@@ -125,7 +125,7 @@ export default function App() {
       // After fade out, show second message smoothly
       setTimeout(() => {
         setFinalMsg(
-          '💖 Always and forever, I’ll love you with all my heart ❤️ You are my everything 🌸',
+          '💖 Always and forever, I’ll love you with all my heart ❤️ You are my everything my cute lilly 🌸',
         );
         setShowMsg(true);
 
