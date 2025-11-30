@@ -487,7 +487,6 @@ export default function App() {
               'Your smile makes everything better 😊',
               'I love you endlessly ❤️',
               'You are my sunshine ☀️',
-              'Forever grateful for you 🌸',
             ].map((msg, i) => (
               <div key={i} className='w-40 h-56 flex flex-col items-center'>
                 <motion.div
