@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { motion, time } from 'framer-motion';
+import { motion, time, AnimatePresence } from 'framer-motion';
 import { Howl } from 'howler';
 import Cake from './components/Candle/Cake';
 import kindness from './assets/kindness.jpeg';
@@ -44,6 +44,32 @@ const timelineData = [
     image: last_visit_0,
   },
 ];
+const specialData = [
+  {
+    image: smile,
+    title: 'Your Smile',
+    description:
+      'Your smile is my favorite thing in the world. No matter how stressed or tired I am, it instantly brings me peace and happiness.',
+  },
+  {
+    image: kindness,
+    title: 'Your Kindness',
+    description:
+      'You are effortlessly thoughtful, caring, and gentle. The way you treat any living being makes you one of the kindest souls I’ve ever known.',
+  },
+  {
+    image: presence,
+    title: 'Your Presence',
+    description:
+      'Even from miles away, your presence feels comforting. You make me feel understood, supported, and cared for in a way nobody else ever has.',
+  },
+  {
+    image: us,
+    title: 'Us Together',
+    description:
+      'You and I together feel like home. Every moment, every call, every memory strengthens what we have, and I wouldn’t trade it for anything.',
+  },
+];
 
 // Audio placeholders (put your audio files in /public/assets)
 const CHIME = '/assets/chime.mp3';
@@ -76,6 +102,38 @@ export default function App() {
   const piano = useRef(null);
   const scrollRef = useRef(null);
   let touchStartX = 0;
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(0); // -1 = left, +1 = right
+
+  const goLeft = () => {
+    if (currentIndex > 0) {
+      setDirection(-1);
+      setCurrentIndex(currentIndex - 1);
+    }
+  };
+
+  const goRight = () => {
+    if (currentIndex < timelineData.length - 1) {
+      setDirection(1);
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  // Detect swipe direction
+  const handleDragEnd = (event, info) => {
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+
+    // right swipe → goLeft
+    if (offset > 100 || velocity > 300) {
+      goLeft();
+    }
+    // left swipe → goRight
+    else if (offset < -100 || velocity < -300) {
+      goRight();
+    }
+  };
 
   const toggleMusic = () => {
     if (!piano.current) {
@@ -144,6 +202,37 @@ export default function App() {
     setTimeout(() => setShowHug(false), 2000); // hide after 2s
   };
 
+  const [verticalDirection, setVerticalDirection] = useState(0);
+
+  // FLIP STATE FOR SPECIAL ITEMS
+  const [specialIndex, setSpecialIndex] = useState(0);
+  const [specialFlipped, setSpecialFlipped] = useState(false);
+  const [specialDirection, setSpecialDirection] = useState(0);
+
+  const goSpecialLeft = () => {
+    if (specialIndex > 0) {
+      setSpecialDirection(-1);
+      setSpecialIndex(specialIndex - 1);
+      setSpecialFlipped(false);
+    }
+  };
+
+  const goSpecialRight = () => {
+    if (specialIndex < specialData.length - 1) {
+      setSpecialDirection(1);
+      setSpecialIndex(specialIndex + 1);
+      setSpecialFlipped(false);
+    }
+  };
+
+  const handleSpecialSwipe = (startX, endX) => {
+    const diff = endX - startX;
+    if (diff > 50) goSpecialLeft();
+    if (diff < -50) goSpecialRight();
+  };
+
+  const flipSpecialCard = () => setSpecialFlipped(!specialFlipped);
+
   return (
     <div className='min-h-screen font-sans bg-gradient-to-b from-pink-100 to-rose-200 text-gray-800'>
       <header className='fixed top-4 right-4 z-50'>
@@ -176,95 +265,223 @@ export default function App() {
 
         {/* Flip cards */}
         <section id='flip' className='snap-start min-h-screen p-8'>
-          <h2 className='text-2xl font-semibold text-center mb-6'>Why you’re special</h2>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto'>
-            {['Your smile', 'Your kindness', 'Your presence in my life', 'Us'].map((t, i) => (
-              <FlipCard key={i} title={t} index={i} image={specialImages[i]} />
-            ))}
+          <h2 className='text-2xl font-semibold text-center mb-6'>Why You’re Special</h2>
+
+          <div
+            className='special-carousel-container'
+            onTouchStart={(e) => (touchStartX = e.touches[0].clientY)}
+            onTouchEnd={(e) => handleSpecialSwipe(touchStartX, e.changedTouches[0].clientY)}
+          >
+            {specialData.map((item, i) => {
+              let pos = i - specialIndex; // relative position
+
+              // determine card transform
+              let scale = pos === 0 ? 1 : 0.85;
+              let x = pos * 120; // spacing
+              let opacity = pos === 0 ? 1 : 0.3;
+              let zIndex = pos === 0 ? 10 : 0;
+
+              return (
+                <div
+                  key={i}
+                  className='special-card'
+                  style={{
+                    transform: `translateX(${x}px) scale(${scale})`,
+                    zIndex,
+                  }}
+                  onClick={() => pos === 0 && flipSpecialCard()} // only active card flips
+                >
+                  <AnimatePresence mode='wait'>
+                    {/* FRONT: Always show for inactive cards, or active if not flipped */}
+                    {(!specialFlipped || pos !== 0) && (
+                      <motion.div
+                        key='front'
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className='flex flex-col justify-center items-center h-full w-full'
+                      >
+                        <h3 className='text-xl font-semibold'>{item.title}</h3>
+                        {pos === 0 && <p className='text-sm text-gray-500 mt-2'>Tap to see</p>}
+                      </motion.div>
+                    )}
+
+                    {/* BACK: Only show for active card when flipped */}
+                    {specialFlipped && pos === 0 && (
+                      <motion.div
+                        key='back'
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className='flex flex-col justify-center items-center h-full w-full'
+                      >
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className='w-48 h-48 rounded-lg mb-2 object-cover'
+                        />
+                        <p className='text-gray-700 text-center'>{item.description}</p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Buttons */}
+          <div className='flex justify-center gap-6 mt-6'>
+            <button
+              onClick={goSpecialLeft}
+              disabled={specialIndex === 0}
+              className={`px-4 py-2 rounded-lg text-white font-semibold shadow-md transition ${
+                specialIndex === 0
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-pink-500 active:scale-90'
+              }`}
+            >
+              ◀ Previous
+            </button>
+
+            <button
+              onClick={goSpecialRight}
+              disabled={specialIndex === specialData.length - 1}
+              className={`px-4 py-2 rounded-lg text-white font-semibold shadow-md transition ${
+                specialIndex === specialData.length - 1
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-pink-500 active:scale-90'
+              }`}
+            >
+              Next ▶
+            </button>
           </div>
         </section>
 
         <section className='snap-start min-h-screen flex flex-col justify-center p-8 bg-white/70 relative'>
           <h2 className='text-2xl font-semibold text-center mb-6'>Our Timeline</h2>
 
-          {/* LEFT BUTTON */}
-          <button
-            onClick={() => scrollRef.current?.scrollBy({ left: -300, behavior: 'smooth' })}
-            className='absolute left-2 top-1/2 -translate-y-1/2 bg-white shadow-lg p-3 rounded-full z-20 active:scale-90 transition'
-          >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-6 w-6'
-              fill='none'
-              viewBox='0 0 24 24'
-              stroke='currentColor'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth='2'
-                d='M15 19l-7-7 7-7'
-              />
-            </svg>
-          </button>
-
-          {/* RIGHT BUTTON */}
-          <button
-            onClick={() => scrollRef.current?.scrollBy({ left: 300, behavior: 'smooth' })}
-            className='absolute right-2 top-1/2 -translate-y-1/2 bg-white shadow-lg p-3 rounded-full z-20 active:scale-90 transition'
-          >
-            <svg
-              xmlns='http://www.w3.org/2000/svg'
-              className='h-6 w-6'
-              fill='none'
-              viewBox='0 0 24 24'
-              stroke='currentColor'
-            >
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M9 5l7 7-7 7' />
-            </svg>
-          </button>
-
-          {/* SCROLL CONTAINER */}
-          <div
-            ref={scrollRef}
-            className='flex gap-6 px-4 py-2 overflow-x-auto snap-x snap-mandatory scrollbar-none'
-            style={{ scrollSnapType: 'x mandatory' }}
-            onTouchStart={(e) => (touchStartX = e.touches[0].clientX)}
-            onTouchEnd={(e) => {
-              const diff = e.changedTouches[0].clientX - touchStartX;
-              if (diff > 50) scrollRef.current?.scrollBy({ left: -300, behavior: 'smooth' });
-              if (diff < -50) scrollRef.current?.scrollBy({ left: 300, behavior: 'smooth' });
-            }}
-          >
-            {timelineData.map((item, i) => (
+          <div className='relative flex justify-center items-center h-[420px] overflow-hidden'>
+            {/* INACTIVE LEFT */}
+            {currentIndex > 0 && (
               <motion.div
-                key={i}
-                className='flex-none w-72 rounded-xl shadow-lg bg-white snap-center p-4'
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: i * 0.3 }}
+                key={'left-' + currentIndex}
+                initial={{ opacity: 0.2, scale: 0.8, x: -120 }}
+                animate={{
+                  opacity: 0.3,
+                  scale: 0.85,
+                  x: -120 + direction * -40, // <- moves with the slide
+                }}
+                transition={{ duration: 0.45 }}
+                className='absolute w-60 h-80 rounded-xl overflow-hidden shadow-md z-0'
               >
-                {/* Image container */}
-                <div className='w-full h-72 rounded-lg overflow-hidden mb-4'>
-                  <img src={item.image} alt={item.text} className='w-full h-full object-cover' />
-                </div>
+                <img
+                  src={timelineData[currentIndex - 1].image}
+                  alt='inactive-left'
+                  className='w-full h-full object-cover'
+                />
+              </motion.div>
+            )}
 
-                {/* Text content */}
-                <div className='text-center text-lg font-medium'>
-                  <p className='text-gray-700'>{item.text}</p>
-                  <p className='text-sm text-gray-500 mt-1'>{item.date}</p>
+            {/* ACTIVE SLIDE WITH SWIPE + ANIMATION */}
+            <AnimatePresence mode='wait' initial={false} custom={direction}>
+              <motion.div
+                key={currentIndex}
+                custom={direction}
+                drag='x'
+                dragConstraints={{ left: 0, right: 0 }}
+                onDragEnd={handleDragEnd}
+                variants={{
+                  enter: (dir) => ({
+                    x: dir === 1 ? 100 : -100,
+                    opacity: 0,
+                    scale: 0.9,
+                  }),
+                  center: {
+                    x: 0,
+                    opacity: 1,
+                    scale: 1,
+                  },
+                  exit: (dir) => ({
+                    x: dir === 1 ? -100 : 100,
+                    opacity: 0,
+                    scale: 0.9,
+                  }),
+                }}
+                initial='enter'
+                animate='center'
+                exit='exit'
+                transition={{ duration: 0.45 }}
+                className='w-72 h-96 rounded-xl overflow-hidden shadow-lg bg-white z-10'
+              >
+                <img
+                  src={timelineData[currentIndex].image}
+                  alt='active'
+                  className='w-full h-72 object-cover'
+                />
+
+                <div className='text-center mt-3 p-2'>
+                  <p className='font-medium text-gray-700'>{timelineData[currentIndex].text}</p>
+                  <p className='text-sm text-gray-500'>{timelineData[currentIndex].date}</p>
                 </div>
               </motion.div>
-            ))}
+            </AnimatePresence>
+
+            {/* INACTIVE RIGHT */}
+            {currentIndex < timelineData.length - 1 && (
+              <motion.div
+                key={'right-' + currentIndex}
+                initial={{ opacity: 0.2, scale: 0.8, x: 120 }}
+                animate={{
+                  opacity: 0.3,
+                  scale: 0.85,
+                  x: 120 + direction * 40, // <- moves with the slide
+                }}
+                transition={{ duration: 0.45 }}
+                className='absolute w-60 h-80 rounded-xl overflow-hidden shadow-md z-0'
+              >
+                <img
+                  src={timelineData[currentIndex + 1].image}
+                  alt='inactive-right'
+                  className='w-full h-full object-cover'
+                />
+              </motion.div>
+            )}
+          </div>
+
+          {/* Buttons */}
+          <div className='flex justify-center gap-6 mt-6'>
+            <button
+              onClick={goLeft}
+              disabled={currentIndex === 0}
+              className={`px-4 py-2 rounded-lg text-white font-semibold shadow-md transition ${
+                currentIndex === 0
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-pink-500 active:scale-90'
+              }`}
+            >
+              ◀ Previous
+            </button>
+
+            <button
+              onClick={goRight}
+              disabled={currentIndex === timelineData.length - 1}
+              className={`px-4 py-2 rounded-lg text-white font-semibold shadow-md transition ${
+                currentIndex === timelineData.length - 1
+                  ? 'bg-gray-300 cursor-not-allowed'
+                  : 'bg-pink-500 active:scale-90'
+              }`}
+            >
+              Next ▶
+            </button>
           </div>
         </section>
 
         {/* Balloons */}
-        {/* Balloons */}
         <section className='snap-start min-h-screen p-8'>
           <h2 className='text-2xl font-semibold text-center mb-6'>Pop a Balloon 🎈</h2>
-          <div className='flex flex-wrap justify-center gap-6'>
+          <div className='grid grid-cols-2 grid-rows-3 gap-6 justify-items-center items-center h-[calc(100vh-4rem)]'>
             {[
               'You light up my world 🌟',
               'Your smile makes everything better 😊',

@@ -3,14 +3,99 @@
 @tailwind utilities;
 
 /* Custom styles for small helpers and placeholders */
-html, body, #root { height: 100%; }
-body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+html,
+body,
+#root {
+  height: 100%;
+}
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
 .placeholder {
-  background: linear-gradient(90deg, rgba(255,255,255,0.6), rgba(255,255,255,0.4));
-  border: 2px dashed rgba(0,0,0,0.06);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color: rgba(0,0,0,0.6);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.4));
+  border: 2px dashed rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(0, 0, 0, 0.6);
+}
+/* -------------------- SPECIAL CAROUSEL -------------------- */
+.special-carousel-container {
+  position: relative;
+  height: 420px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.special-card {
+  position: absolute;
+  width: 280px;
+  height: 360px;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  background: white;
+  cursor: pointer;
+  transform-style: preserve-3d;
+  transition: transform 0.6s, opacity 0.45s, scale 0.45s;
+}
+
+.special-card-front,
+.special-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.special-card-back {
+  transform: rotateY(180deg);
+  padding: 1rem;
+  text-align: center;
+}
+
+.flip-card {
+  perspective: 1000px;
+  width: 18rem; /* width of the card */
+  height: 24rem; /* height of the card */
+  margin: 0 0.5rem; /* optional spacing between cards */
+  cursor: pointer;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 1rem;
+  overflow: hidden;
+  backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
 }
